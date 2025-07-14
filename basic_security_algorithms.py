@@ -1,3 +1,37 @@
+import random
+
+def generate_key():
+    alphabet = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    shuffled = alphabet[:]
+    random.shuffle(shuffled)
+    return ''.join(shuffled)
+
+def monoalphabetic_cipher(text, key, mode):
+    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    text = text.upper()
+    key = key.upper()
+
+    if len(key) != 26 or set(key) != set(alphabet):
+        print("Invalid key!")
+        return ""
+
+    if mode == 'e':
+        mapping = {alphabet[i]: key[i] for i in range(26)}
+    else:
+        mapping = {key[i]: alphabet[i] for i in range(26)}
+
+    result = ""
+    for char in text:
+        if char in mapping:
+            result += mapping[char]
+        else:
+            result += char
+    return result
+
+def sorted_freq_letters(freq_dict):
+    return sorted(freq_dict, key=freq_dict.get, reverse=True)
+
+
 def caesar_cipher(text, shift, mode):
     result = ""
     for char in text:
@@ -15,30 +49,6 @@ def caesar_cipher(text, shift, mode):
 def display_ascii_values(text):
     return ' '.join(str(ord(c)) for c in text)
 
-def monoalphabetic_cipher(text, key, mode):
-    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    text = text.upper()
-    key = key.upper()
-
-    if len(key) != 26 or set(key) != set(alphabet):
-        print("Invalid key! It must contain all letters A-Z exactly once.")
-        return ""
-
-    if mode == 'e':
-        mapping = {alphabet[i]: key[i] for i in range(26)}
-    elif mode == 'd':
-        mapping = {key[i]: alphabet[i] for i in range(26)}
-    else:
-        print("Invalid mode! Use 'e' for encrypt or 'd' for decrypt.")
-        return ""
-
-    result = ""
-    for char in text:
-        if char in mapping:
-            result += mapping[char]
-        else:
-            result += char
-    return result
 
 def main():
     while True:
@@ -78,7 +88,16 @@ def main():
             case '2':
                 print("\n--- Monoalphabetic Cipher ---")
                 text = input("Enter text: ")
-                key = input("Enter 26-letter substitution key (A-Z exactly once): ").upper()
+                
+                key = input("Enter 26-letter substitution key (A-Z exactly once) or leave empty to auto-generate: ").upper()
+                
+                # If no key entered, generate a random one
+                if not key:
+                    alphabet = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+                    random.shuffle(alphabet)
+                    key = ''.join(alphabet)
+                    print(f"Generated key: {key}")
+                
                 mode = input("Enter mode ('e' for encrypt, 'd' for decrypt): ").lower()
 
                 result = monoalphabetic_cipher(text, key, mode)
@@ -91,8 +110,7 @@ def main():
                     elif key2 == '2':
                         opposite_mode = 'd' if mode == 'e' else 'e'
                         decrypted = monoalphabetic_cipher(result, key, opposite_mode)
-                        print("Decrypted Text:", decrypted)
-        
+                        print("Decrypted Text:", decrypted)        
             case '0':
                 print("Exiting...")
                 break
