@@ -16,28 +16,27 @@ def rail_fence_encrypt(text, rails):
 def rail_fence_decrypt(cipher, rails):
     if rails == 1:
         return cipher
-    
-    # Create fence pattern to determine positions
-    fence = [[None for _ in range(len(cipher))] for _ in range(rails)]
-    
-    # Mark positions where characters should go
+    # Create an empty fence
+    fence = [['\n' for _ in range(len(cipher))] for _ in range(rails)]
+
+    # Mark the places with '*'
     rail = 0
     direction = 1
     for i in range(len(cipher)):
-        fence[rail][i] = True  # Mark this position
+        fence[rail][i] = '*'
         rail += direction
         if rail == 0 or rail == rails - 1:
             direction *= -1
-    
-    # Fill fence with cipher characters row by row
-    cipher_index = 0
+
+    # Fill the fence with cipher letters
+    index = 0
     for r in range(rails):
         for c in range(len(cipher)):
-            if fence[r][c] is True:
-                fence[r][c] = cipher[cipher_index]
-                cipher_index += 1
-    
-    # Read fence in zigzag pattern to get original text
+            if fence[r][c] == '*' and index < len(cipher):
+                fence[r][c] = cipher[index]
+                index += 1
+
+    # Read the fence to reconstruct the text
     result = []
     rail = 0
     direction = 1
@@ -46,7 +45,6 @@ def rail_fence_decrypt(cipher, rails):
         rail += direction
         if rail == 0 or rail == rails - 1:
             direction *= -1
-    
     return ''.join(result)
 
 
@@ -58,6 +56,7 @@ def generate_key():
 
 def monoalphabetic_cipher(text, key, mode):
     alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    text = text.upper()
     key = key.upper()
 
     if len(key) != 26 or set(key) != set(alphabet):
@@ -71,13 +70,8 @@ def monoalphabetic_cipher(text, key, mode):
 
     result = ""
     for char in text:
-        if char.upper() in mapping:
-            mapped_char = mapping[char.upper()]
-            # Preserve original case
-            if char.islower():
-                result += mapped_char.lower()
-            else:
-                result += mapped_char
+        if char in mapping:
+            result += mapping[char]
         else:
             result += char
     return result
@@ -108,32 +102,17 @@ def find_position(matrix, char):
                 return i, j
     return None
 
-def process_text_playfair(text, for_decrypt=False):
-    # Store original case information
-    original_case = [(i, char.islower()) for i, char in enumerate(text) if char.isalpha()]
-    
+def process_text_playfair(text):
     # Prepare text: uppercase, replace J with I, remove non-alpha, create pairs
-    processed_text = text.upper().replace('J', 'I')
-    processed_text = ''.join(filter(str.isalpha, processed_text))
-    
-    if for_decrypt:
-        # For decryption, just split into pairs without adding X
-        pairs = []
-        for i in range(0, len(processed_text), 2):
-            if i + 1 < len(processed_text):
-                pairs.append((processed_text[i], processed_text[i+1]))
-            else:
-                pairs.append((processed_text[i], 'X'))
-        return pairs, original_case
-    
-    # For encryption, add X between duplicate letters and at end if needed
+    text = text.upper().replace('J', 'I')
+    text = ''.join(filter(str.isalpha, text))
     i = 0
     pairs = []
-    while i < len(processed_text):
-        a = processed_text[i]
+    while i < len(text):
+        a = text[i]
         b = ''
-        if i + 1 < len(processed_text):
-            b = processed_text[i+1]
+        if i + 1 < len(text):
+            b = text[i+1]
             if a == b:
                 b = 'X'
                 i += 1
@@ -143,26 +122,11 @@ def process_text_playfair(text, for_decrypt=False):
             b = 'X'
             i += 1
         pairs.append((a, b))
-    return pairs, original_case
+    return pairs
 
 def playfair_cipher(text, key, mode):
-    # Store original spacing for decryption
-    original_spaces = []
-    if mode == 'd':
-        # For decryption, we don't have original spacing info, so just process as-is
-        matrix = prepare_playfair_key(key)
-        pairs, case_info = process_text_playfair(text, for_decrypt=True)
-    else:
-        # For encryption, store space positions
-        for i, char in enumerate(text):
-            if char == ' ':
-                # Count only alphabetic characters before this space
-                alpha_count = sum(1 for c in text[:i] if c.isalpha())
-                original_spaces.append(alpha_count)
-        
-        matrix = prepare_playfair_key(key)
-        pairs, case_info = process_text_playfair(text, for_decrypt=False)
-    
+    matrix = prepare_playfair_key(key)
+    pairs = process_text_playfair(text)
     result = ""
     for a, b in pairs:
         r1, c1 = find_position(matrix, a)
@@ -196,40 +160,6 @@ def playfair_cipher(text, key, mode):
         else:
             print("Invalid mode! Use 'e' or 'd'.")
             return ""
-    
-    # Clean up result for decryption
-    if mode == 'd':
-        # Remove trailing X
-        if result.endswith('X'):
-            result = result[:-1]
-        # Remove X padding between identical characters
-        cleaned_result = ""
-        i = 0
-        while i < len(result):
-            if (i > 0 and i < len(result) - 1 and 
-                result[i] == 'X' and 
-                result[i-1] == result[i+1]):
-                i += 1
-                continue
-            cleaned_result += result[i]
-            i += 1
-        result = cleaned_result
-        
-        # Restore original case for decryption
-        if mode == 'd' and case_info:
-            final_result = ""
-            result_idx = 0
-            for orig_idx, was_lower in case_info:
-                if result_idx < len(result):
-                    if was_lower:
-                        final_result += result[result_idx].lower()
-                    else:
-                        final_result += result[result_idx]
-                    result_idx += 1
-            # Add any remaining characters
-            final_result += result[result_idx:]
-            result = final_result
-    
     return result
 
 
@@ -251,15 +181,16 @@ def display_ascii_values(text):
     return ' '.join(str(ord(c)) for c in text)
 
 def PollyAlphabetic_cipher(text, key, mode):
+    text = text.upper()
     key = key.upper()
     result = ""
     key_length = len(key)
     alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
     def shift_char(c, k, mode):
-        if c.upper() not in alphabet:
+        if c not in alphabet:
             return c
-        text_idx = alphabet.index(c.upper())
+        text_idx = alphabet.index(c)
         key_idx = alphabet.index(k)
         if mode == 'e':
             shifted_idx = (text_idx + key_idx) % 26
@@ -267,16 +198,11 @@ def PollyAlphabetic_cipher(text, key, mode):
             shifted_idx = (text_idx - key_idx) % 26
         else:
             return c
-        shifted_char = alphabet[shifted_idx]
-        # Preserve original case
-        if c.islower():
-            return shifted_char.lower()
-        else:
-            return shifted_char
+        return alphabet[shifted_idx]
 
     key_index = 0
     for char in text:
-        if char.upper() in alphabet:
+        if char in alphabet:
             result += shift_char(char, key[key_index % key_length], mode)
             key_index += 1
         else:
@@ -296,7 +222,55 @@ def vernam_cipher(text, key):
     return result
 
 def main():
-    
+    # Example usages for each cipher
+    print("\n--- Substitution Techniques Examples ---")
+    # Caesar Cipher Example
+    caesar_text = "HELLO WORLD"
+    caesar_shift = 3
+    caesar_encrypted = caesar_cipher(caesar_text, caesar_shift, 'e')
+    caesar_decrypted = caesar_cipher(caesar_encrypted, caesar_shift, 'd')
+    print(f"Caesar Cipher: Text='{caesar_text}', Shift={caesar_shift}")
+    print(f"Encrypted: {caesar_encrypted}")
+    print(f"Decrypted: {caesar_decrypted}\n")
+
+    # Monoalphabetic Cipher Example
+    mono_text = "HELLO WORLD"
+    mono_key = generate_key()
+    mono_encrypted = monoalphabetic_cipher(mono_text, mono_key, 'e')
+    mono_decrypted = monoalphabetic_cipher(mono_encrypted, mono_key, 'd')
+    print(f"Monoalphabetic Cipher: Text='{mono_text}', Key='{mono_key}'")
+    print(f"Encrypted: {mono_encrypted}")
+    print(f"Decrypted: {mono_decrypted}\n")
+
+    # Polyalphabetic Cipher Example (Vigenere)
+    poly_text = "HELLO WORLD"
+    poly_key = "KEY"
+    poly_encrypted = PollyAlphabetic_cipher(poly_text, poly_key, 'e')
+    poly_decrypted = PollyAlphabetic_cipher(poly_encrypted, poly_key, 'd')
+    print(f"Polyalphabetic Cipher: Text='{poly_text}', Key='{poly_key}'")
+    print(f"Encrypted: {poly_encrypted}")
+    print(f"Decrypted: {poly_decrypted}\n")
+
+    print("--- Transposition Techniques Examples ---")
+    # Rail Fence Example
+    rail_text = "HELLO WORLD"
+    rail_rails = 3
+    rail_encrypted = rail_fence_encrypt(rail_text, rail_rails)
+    rail_decrypted = rail_fence_decrypt(rail_encrypted, rail_rails)
+    print(f"Rail Fence: Text='{rail_text}', Rails={rail_rails}")
+    print(f"Encrypted: {rail_encrypted}")
+    print(f"Decrypted: {rail_decrypted}\n")
+
+    # Vernam Cipher Example
+    vernam_text = "HELLO"
+    vernam_key = "XMCKL"  # Key must be same length as text
+    vernam_encrypted = vernam_cipher(vernam_text, vernam_key)
+    # To decrypt, apply Vernam again with same key
+    vernam_decrypted = vernam_cipher(vernam_encrypted, vernam_key)
+    print(f"Vernam Cipher: Text='{vernam_text}', Key='{vernam_key}'")
+    print(f"Encrypted: {vernam_encrypted}")
+    print(f"Decrypted: {vernam_decrypted}\n")
+
     while True:
         print("\n=== Encryption Utility ===")  
         print("Select Algorithm:")
@@ -307,8 +281,7 @@ def main():
         print("3. PolyAlphabetical Cipher")
         print("4. Play Fair")
         print("Transposition Method")
-        print("5. Rail Fence")
-        print("6. Vernam Cipher (XOR/OTP)")
+        print("5. Rail Fense   ")
        
 
         algorithm_choice = input("Enter choice: ").strip()
@@ -362,7 +335,7 @@ def main():
                     elif key2 == '2':
                         opposite_mode = 'd' if mode == 'e' else 'e'
                         decrypted = monoalphabetic_cipher(result, key, opposite_mode)
-                        print("Decrypted Text:", decrypted)
+                        print("Decrypted Text:", decrypted)        \
            
             case '3':
                 print("\n--- PolyAlphabetical Cipher ---")
@@ -384,32 +357,32 @@ def main():
                         decrypted = PollyAlphabetic_cipher(result, key, 'd')
                         print("Decrypted Text:", decrypted)
             case '4':
-                print("\n--- Playfair Cipher ---")
-                text = input("Enter text: ")
-                key = input("Enter key (alphabetic only): ")
-                mode = input("Enter mode ('e' for encrypt, 'd' for decrypt): ").lower()
-
-                if not key.isalpha():
-                    print("Key must be alphabetic only!")
-                    continue
-
-                if mode not in ['e', 'd']:
-                    print("Invalid mode! Please enter 'e' or 'd'.")
-                    continue
-
-                result = playfair_cipher(text, key, mode)
-                if result:
-                    print("Result:", result)
-
-                    key_input = input("To exit enter '1', to decrypt the result enter '2', or to continue enter '0': ")
-                    if key_input == '1':
+                    print("\n--- Playfair Cipher ---")
+                    text = input("Enter text: ")
+                    key = input("Enter key (alphabetic only): ")
+                    mode = input("Enter mode ('e' for encrypt, 'd' for decrypt): ").lower()
+               
+                    if not key.isalpha():
+                        print("Key must be alphabetic only!")
+                        break  # or continue depending on your main loop
+               
+                    if mode not in ['e', 'd']:
+                        print("Invalid mode! Please enter 'e' or 'd'.")
                         break
-                    elif key_input == '2':
-                        if mode == 'e':
-                            decrypted = playfair_cipher(result, key, 'd')
-                            print("Decrypted Text:", decrypted)
-                        else:
-                            print("Already decrypted!")
+               
+                    result = playfair_cipher(text, key, mode)
+                    if result:
+                        print("Result:", result)
+               
+                        key_input = input("To exit enter '1', to decrypt the result enter '2', or to continue enter '0': ")
+                        if key_input == '1':
+                            break
+                        elif key_input == '2':
+                            if mode == 'e':
+                                decrypted = playfair_cipher(result, key, 'd')
+                                print("Decrypted Text:", decrypted)
+                            else:
+                                print("Already decrypted!")
 
                
            
@@ -433,29 +406,27 @@ def main():
                 else:
                     result = rail_fence_decrypt(text, rails)
                 print("Result:", result)
-                key_input = input("To exit enter '1', to switch mode enter '2', or to continue enter '0': ")
+                key_input = input("To exit enter '1', to switch mode enter '2', to try Vernam cipher enter '3', or to continue enter '0': ")
                 if key_input == '1':
                     break
                 elif key_input == '2':
                     mode = 'd' if mode == 'e' else 'e'
                     if mode == 'e':
-                        switched_result = rail_fence_encrypt(result, rails)
+                        result = rail_fence_encrypt(text, rails)
                     else:
-                        switched_result = rail_fence_decrypt(result, rails)
-                    print(f"Switched mode ({mode}):", switched_result)
-                
-            case '6':
-                print("\n--- Vernam Cipher (XOR/One-Time Pad) ---")
-                v_text = input("Enter text (length N): ")
-                v_key = input("Enter key (length N): ")
-                if len(v_text) != len(v_key):
-                    print("Key must be the same length as text!")
-                else:
-                    v_encrypted = vernam_cipher(v_text, v_key)
-                    v_encrypted_hex = ' '.join(f"{ord(ch):02X}" for ch in v_encrypted)
-                    print(f"Encrypted (hex): {v_encrypted_hex}")
-                    v_decrypted = vernam_cipher(v_encrypted, v_key)
-                    print(f"Decrypted: {v_decrypted}")
+                        result = rail_fence_decrypt(text, rails)
+                    print(f"Switched mode ({mode}):", result)
+                elif key_input == '3':
+                    print("\n--- Vernam Cipher ---")
+                    vernam_text = input("Enter text (length N): ")
+                    vernam_key = input("Enter key (length N): ")
+                    if len(vernam_text) != len(vernam_key):
+                        print("Key must be the same length as text!")
+                    else:
+                        vernam_encrypted = vernam_cipher(vernam_text, vernam_key)
+                        print(f"Encrypted: {vernam_encrypted}")
+                        vernam_decrypted = vernam_cipher(vernam_encrypted, vernam_key)
+                        print(f"Decrypted: {vernam_decrypted}")
             case '0':
                 print("Exiting...")
                 break
@@ -465,4 +436,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
