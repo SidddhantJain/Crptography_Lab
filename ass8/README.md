@@ -30,6 +30,16 @@ D:/Siddhant/projects/Crptography_Lab/.venv/Scripts/python.exe -m pip install cry
 
 ## Usage (PowerShell)
 
+### Interactive (prompt-driven)
+
+```powershell
+D:/Siddhant/projects/Crptography_Lab/.venv/Scripts/python.exe ./ass8/ass8.py interactive
+# Follow the prompts to:
+#   1) Generate keys
+#   2) Send (encrypt+sign) a .png (or any file)
+#   3) Receive (verify+decrypt) a package
+```
+
 ```powershell
 # 0) Generate keys for Alice and Bob
 D:/Siddhant/projects/Crptography_Lab/.venv/Scripts/python.exe ./ass8/ass8.py gen-keys --who Alice

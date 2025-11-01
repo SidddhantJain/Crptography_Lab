@@ -434,6 +434,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_recv.add_argument("--password", help="Password to unwrap the AES key for AES-KW-SCRYPT packages")
     p_recv.set_defaults(func=cmd_receive)
 
+    p_int = sub.add_parser("interactive", help="Prompt-driven mode (no flags needed)")
+    p_int.set_defaults(func=cmd_interactive)
+
     return p
 
 
@@ -443,6 +446,69 @@ def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
     args.func(args)
+
+
+# ---------- Interactive ----------
+
+def prompt_bool(msg: str, default: bool = False) -> bool:
+    sfx = "[Y/n]" if default else "[y/N]"
+    while True:
+        v = input(f"{msg} {sfx}: ").strip().lower()
+        if not v:
+            return default
+        if v in ("y", "yes"):
+            return True
+        if v in ("n", "no"):
+            return False
+        print("Please answer y or n.")
+
+
+def cmd_interactive(_: argparse.Namespace):
+    ensure_dirs()
+    print("ASS8 Interactive Mode — Secure Image Transmission")
+    while True:
+        print("\nChoose an action:\n  1) Generate keys\n  2) Send (encrypt+sign)\n  3) Receive (verify+decrypt)\n  4) Quit")
+        choice = input("> ").strip()
+        if choice == "1":
+            who = input("User name for keypair (e.g., Alice): ").strip()
+            if not who:
+                print("Name cannot be empty.")
+                continue
+            cmd_gen_keys(argparse.Namespace(who=who))
+        elif choice == "2":
+            sender = input("Sender name: ").strip()
+            receiver = input("Receiver name: ").strip()
+            infile = input("Path to image (e.g., ./ass8/sample.png): ").strip()
+            outfile = input("Path to output package (e.g., ./ass8/out.ass8pkg): ").strip()
+            use_pass = prompt_bool("Use password-based wrapping instead of receiver RSA key?", default=False)
+            compress = prompt_bool("Compress before encrypting?", default=True)
+            ns = argparse.Namespace(sender=sender, receiver=receiver, infile=infile, outfile=outfile, compress=compress, password=None)
+            if use_pass:
+                ns.password = input("Password: ").strip()
+            try:
+                cmd_send(ns)
+            except Exception as e:
+                print("Error:", e)
+        elif choice == "3":
+            sender = input("Expected sender name: ").strip()
+            receiver = input("Your receiver name: ").strip()
+            infile = input("Path to input package (.ass8pkg): ").strip()
+            outfile = input("Path to write decrypted image: ").strip()
+            max_skew = input("Max allowed skew in seconds (0=disabled) [86400]: ").strip()
+            max_skew = int(max_skew) if max_skew else 86400
+            use_pass = prompt_bool("Is this a password-wrapped package?", default=False)
+            ns = argparse.Namespace(sender=sender, receiver=receiver, infile=infile, outfile=outfile, max_skew=max_skew, password=None)
+            if use_pass:
+                ns.password = input("Password: ").strip()
+            try:
+                cmd_receive(ns)
+            except Exception as e:
+                print("Error:", e)
+        elif choice == "4" or choice.lower() in ("q", "quit", "exit"):
+            print("Goodbye.")
+            break
+        else:
+            print("Invalid choice.")
 
 
 if __name__ == "__main__":
