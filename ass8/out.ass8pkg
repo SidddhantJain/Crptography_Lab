@@ -1,0 +1,28 @@
+{
+  "alg": {
+    "sig": "RSA-PSS-SHA256",
+    "sym": "AES-256-GCM",
+    "wrap": "RSA-OAEP-SHA256"
+  },
+  "ciphertext": "Vx52EEx5sJOCJDurrebDaIjt7HrN20/bWQvqUd2eH1PTeLtygsVwtH1dy068ZZYQ8WAEiiGsofxGp25ikcTteNoyGYtJ",
+  "digest": {
+    "sha256": "7c975f5332386f317b57bc2995f501ef83ae8ce0de93ca87c09eed160b5707a1"
+  },
+  "meta": {
+    "compressed": true,
+    "filename": "sample.png",
+    "filesize": 68,
+    "message_id": "dwV1qmvINMQxWcVAOm3jeA",
+    "mimetype": "image/png",
+    "ts": 1762025544
+  },
+  "receiver": "Bob",
+  "sender": "Alice",
+  "signature": "nm+Fp+8/P+1lrjZ6FBc8CuOXfmQ+BS8pyUJJ4fGJO6nNCAgLTHoyGUCYdRLTIMG7cX3w61pGF2QIedULH3rDl2cr4pB2ivIggHsubg93ybqyRT6OyTrFhYWy8KD2ADQdpKcwNVEFi3t+TzzpFsvSAMH2C6w/ki3BiAXsfUF33JasJOrZX+D1bFaqA4RhdxHyKtRhAsHil3NQQoC1fNjoMv1NqYyIzC/cRsjjlnW4p9m2nVk+iM2aD7Byzge9T3g9lLXRcMCZ1mWgcvrrE+6mIJ23+SupZT8fSqRetULty/hrkSVi+pKkq/sRDQK1IbdOgEqN2wh17vmpNoKxBUDJY7KnXH4mDhYJd1xxOWMowl1qdUomPSaBu9bobIdw+keA1LVYh432qI98HkgUBMtI+MT0lvRbOctOnXsu8XTa4uGJ1UNNhO0KkLceq/wjpvn/TjhabXp/UOJkWxaWU+3bgJk2PXONO6SKagctygE0kX5RhV70A6ekBd0+SvKBaRQL",
+  "version": "ass8.v1",
+  "wrap": {
+    "ekey": "j8fK/ug7Rq9YcTBYOnHnn3KWc9acXyd+zaOPKRzPGpAMh+33uwAF+G+qWLHPuhkKuwjSiriCHx17I+WmlMkiN64vlC06pz4F6eezTZYssREEcR6o1XgtdPt9hMkPZuWYU3anFtLcgAs4dbh1PxDmwQdR2mKjPHNrgxU86C/UfCqvvPkAxDmQj9YdASnb5wdB5BAFKUG4JAKlkjVwA4yGa/4h+Gb+xH5BgAYkudhCtwdNIQT9pIqZBatWElN1niqpHidt3ZVWZx05YzQ5hNWqeAmGUq9kVfwHf1NX30V80zU/Fg08Otgv3PvVi26Ae4tkEFKdKnJqmOmiiQhfak2aDnPzi2gA3mf19n14RYiPK4LFFyKrIHKh3ivRDumqJ5XqMEpMuxoQpUXtYqVhs+GWeS62oO1He7/+nDaqXtgEqA9vzFtkTOj5Rh41RThqwhw2kDqNVGOMz8vK0rOk8qH1MNCiJ2J6M3vjOaioY93MBzwgZJeSkGkzpJQGNNJdM5nH",
+    "nonce": "7RMy9dFqv41RSoBU",
+    "tag": "0CwZZf5qFSd51Z6Zlvp8ZQ=="
+  }
+}

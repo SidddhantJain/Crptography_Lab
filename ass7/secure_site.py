@@ -233,7 +233,7 @@ def login():
                         <input type=hidden name=csrf_token value="{csrf_token()}">
                         <label>Username<input required name=username type=text value="{u}"></label>
                         <label>Password<input required name=password type=password></label>
-                        <label>Authenticator code (TOTP)<input name=totp type=text pattern="\d{{6}}"></label>
+                                                <label>Authenticator code (TOTP)<input name=totp type=text pattern="\\d{{6}}"></label>
                         <button type=submit>Login</button>
                       </form>
                     </div>
