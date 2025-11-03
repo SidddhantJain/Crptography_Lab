@@ -665,25 +665,51 @@ def _demo():
 if __name__ == "__main__":
 	import sys
 
-	def interactive():
-		print("=== Key-Routed Authenticated Cipher Demo ===")
-		msg = input("Enter message to encrypt: ")
-		K = generate_key(18)
-		print(f"Generated key (keep it secret): {K}")
-		# Encrypt with random IV (recommended)
-		cipher, blob = encrypt(K, msg)
-		IV, TAG, CT = blob[:12], blob[-32:], blob[12:-32]
-		print(f"Cipher chosen: {cipher}")
-		print(f"IV (hex):  {IV.hex()}")
-		print(f"CT (hex):  {CT.hex()}")
-		print(f"TAG (hex): {TAG.hex()}")
-		# "send" for decryption
-		cipher2, pt = decrypt(K, blob)
-		print("Decrypted:", pt)
+	def menu():
+		print("=== ASS3: Key-Routed Authenticated Cipher ===")
+		K = None
+		legacy = False
+		while True:
+			print("\n1) Generate random 18-char key" + (f" (current: {K})" if K else ""))
+			print("2) Encrypt text → hex blob")
+			print("3) Decrypt hex blob → text")
+			print("4) Toggle legacy_reverse (currently: " + ("ON" if legacy else "OFF") + ")")
+			print("5) Quit")
+			ch = input("> ").strip()
+			if ch == "1":
+				K = generate_key(18)
+				print("Key:", K)
+			elif ch == "2":
+				if not K:
+					K = generate_key(18)
+					print("Generated key:", K)
+				msg = input("Enter plaintext: ")
+				try:
+					_, blob = encrypt(K, msg, legacy_reverse=legacy)
+					print("BLOB hex (IV||CT||TAG):")
+					print(blob.hex())
+				except Exception as e:
+					print("Encrypt error:", e)
+			elif ch == "3":
+				if not K:
+					K = input("Enter 18-char key: ").strip() or generate_key(18)
+				hx = input("Enter BLOB hex (IV||CT||TAG): ").strip()
+				try:
+					blob = bytes.fromhex(hx)
+					_, pt = decrypt(K, blob, legacy_reverse=legacy)
+					print("Plaintext:", pt)
+				except Exception as e:
+					print("Decrypt error:", e)
+			elif ch == "4":
+				legacy = not legacy
+			elif ch == "5":
+				break
+			else:
+				print("Invalid choice.")
 
 	try:
 		if sys.stdin.isatty():
-			interactive()
+			menu()
 		else:
 			_demo()
 	except KeyboardInterrupt:

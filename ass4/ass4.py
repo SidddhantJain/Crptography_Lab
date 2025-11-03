@@ -185,16 +185,63 @@ def main():
     parser.add_argument("--mitm", action="store_true", help="Run MITM demo only")
     args = parser.parse_args()
 
-    if args.clean and args.mitm:
-        demo_clean()
-        demo_mitm()
-    elif args.clean:
-        demo_clean()
-    elif args.mitm:
-        demo_mitm()
+    def interactive_menu():
+        print("=== Assignment 4: DH + MITM + Text E/D ===")
+        while True:
+            print("\nChoose: 1) Clean DH demo  2) MITM demo  3) Text encrypt/decrypt with clean DH  4) Quit")
+            ch = input("> ").strip()
+            if ch == "1":
+                demo_clean()
+            elif ch == "2":
+                demo_mitm()
+            elif ch == "3":
+                # Clean DH shared key between Alice and Bob
+                params = SMALL_PARAMS
+                alice = dh_generate_keypair(params)
+                bob = dh_generate_keypair(params)
+                s = dh_compute_shared(params, alice.priv, bob.pub)
+                print(f"Derived shared secret: {s}")
+                while True:
+                    print("  [a] Encrypt text  [b] Decrypt hex  [c] Back")
+                    c2 = input("  > ").strip().lower()
+                    if c2 == "a":
+                        msg = input("  Enter plaintext: ")
+                        ct = encrypt_message(msg, s)
+                        print("  Ciphertext (hex):", ct.hex())
+                        if input("  Decrypt now? [Y/n]: ").strip().lower() in ("", "y", "yes"):
+                            rec = decrypt_message(ct, s)
+                            print("  Decrypted:", rec)
+                    elif c2 == "b":
+                        hx = input("  Enter ciphertext hex: ").strip()
+                        try:
+                            ct = bytes.fromhex(hx)
+                            rec = decrypt_message(ct, s)
+                            print("  Decrypted:", rec)
+                        except Exception as e:
+                            print("  Error:", e)
+                    elif c2 == "c":
+                        break
+                    else:
+                        print("  Invalid option.")
+            elif ch == "4":
+                break
+            else:
+                print("Invalid choice.")
+
+    # If specific flags provided, honor them; otherwise show interactive menu in TTY
+    if args.clean or args.mitm:
+        if args.clean and args.mitm:
+            demo_clean(); demo_mitm()
+        elif args.clean:
+            demo_clean()
+        else:
+            demo_mitm()
     else:
-        demo_clean()
-        demo_mitm()
+        import sys
+        if sys.stdin.isatty():
+            interactive_menu()
+        else:
+            demo_clean(); demo_mitm()
 
 
 if __name__ == "__main__":

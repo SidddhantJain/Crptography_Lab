@@ -416,3 +416,13 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Assignment 8 run artifacts
+ass8/*.ass8pkg
+ass8/received*.png
+ass8/receive_log.db
+ass8/inbox/

@@ -275,5 +275,59 @@ def main():
 
 
 if __name__ == "__main__":
-	main()
+	# Offer a simple menu when running interactively; fall back to benchmark otherwise
+	import sys, base64
+
+	def rsa_text_menu():
+		print("\n=== RSA-OAEP Text Encrypt/Decrypt (Demo) ===")
+		print("Note: Max plaintext length is limited by OAEP padding (~190 bytes for 2048-bit).")
+		key_bits = 2048
+		priv = gen_key(key_bits)
+		pub = priv.public_key()
+		while True:
+			print("\nChoose: 1) Encrypt text  2) Decrypt base64  3) New key  4) Back")
+			ch = input("> ").strip()
+			if ch == "1":
+				pt = input("Enter plaintext (short text): ").encode("utf-8")
+				maxb = max_oaep_message_bytes(key_bits)
+				if len(pt) > maxb:
+					print(f"Plaintext too long for OAEP with {key_bits}-bit key (max {maxb} bytes)")
+					continue
+				ct = rsa_encrypt(pub, pt)
+				b64 = base64.b64encode(ct).decode("ascii")
+				print("Ciphertext (base64):")
+				print(b64)
+				# Offer immediate decrypt to verify
+				ans = input("Decrypt now? [Y/n]: ").strip().lower()
+				if ans in ("", "y", "yes"):
+					dec = rsa_decrypt(priv, ct).decode("utf-8", errors="replace")
+					print("Decrypted:", dec)
+			elif ch == "2":
+				b64 = input("Enter base64 ciphertext: ").strip()
+				try:
+					ct = base64.b64decode(b64.encode("ascii"))
+					dec = rsa_decrypt(priv, ct).decode("utf-8", errors="replace")
+					print("Decrypted:", dec)
+				except Exception as e:
+					print("Decrypt error:", e)
+			elif ch == "3":
+				print("Generating a new 2048-bit RSA keypair...")
+				priv = gen_key(key_bits)
+				pub = priv.public_key()
+			elif ch == "4":
+				break
+			else:
+				print("Invalid choice.")
+
+	if sys.stdin.isatty():
+		print("=== Assignment 2 ===")
+		print("1) Run RSA timing experiment")
+		print("2) Text encrypt/decrypt (RSA-OAEP)")
+		choice = input("Select [1/2, default=1]: ").strip()
+		if choice == "2":
+			rsa_text_menu()
+		else:
+			main()
+	else:
+		main()
 
