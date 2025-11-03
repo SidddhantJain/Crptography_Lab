@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block body %}
+<div class="box">
+  <h3>Create Account</h3>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Username
+      <input required name="username" type="text" minlength="3" maxlength="64">
+    </label>
+    <label>Password
+      <input required name="password" type="password" minlength="12">
+    </label>
+    <button type="submit">Register</button>
+  </form>
+</div>
+{% endblock %}

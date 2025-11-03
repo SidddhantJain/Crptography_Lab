@@ -21,7 +21,7 @@ import base64
 import sqlite3
 import hashlib
 from typing import List, Tuple, Dict
-from flask import Flask, request, redirect, url_for, session, flash, render_template_string
+from flask import Flask, request, redirect, url_for, session, flash, render_template
 
 APP_SECRET = os.environ.get("FLASK_SECRET", "dev-secret-change-me")
 PEPPER = os.environ.get("SECRET_PEPPER", "dev-pepper-change-me").encode()
@@ -37,30 +37,8 @@ app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax", S
 
 rate_buckets: Dict[str, List[float]] = {}
 
-BASE = """
-<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width, initial-scale=1">
-<title>{{title}}</title>
-<style>body{font-family:system-ui,Arial;margin:2rem}nav a{margin-right:1rem}.box{max-width:560px;padding:1rem;border:1px solid #ddd;border-radius:8px}.ok{color:#090}.err{color:#900}label{display:block;margin-top:.7rem}input[type=text],input[type=password]{width:100%;padding:.5rem}button{padding:.5rem 1rem;margin-top:1rem}.flash{margin:.5rem 0;padding:.5rem;border-radius:4px}.error{background:#ffe0e0}.info{background:#e0f4ff}</style>
-</head><body>
-<nav>
-  <a href="{{url_for('home')}}">Home</a>
-  {% if session.get('user') %}
-    <a href="{{url_for('profile')}}">Profile</a>
-    <a href="{{url_for('logout')}}">Logout</a>
-  {%else%}
-    <a href="{{url_for('register')}}">Register</a>
-    <a href="{{url_for('login')}}">Login</a>
-  {%endif%}
-</nav>
-{% for cat,msg in get_flashed_messages(with_categories=True) %}
-  <div class="flash {{cat}}">{{msg}}</div>
-{% endfor %}
-{{body|safe}}
-</body></html>
-"""
-
-def page(title: str, body: str):
-    return render_template_string(BASE, title=title, body=body)
+def page(template: str, **kwargs):
+        return render_template(template, **kwargs)
 
 @app.after_request
 def headers(r):
@@ -154,13 +132,7 @@ def rate_ok(ip: str) -> bool:
 
 @app.route('/')
 def home():
-    body = """
-    <div class=box>
-      <h2>Secure Website Demo</h2>
-      <p>Demonstrates: scrypt password hashing with salt+pepper, password policy, rate limiting, lockout, and optional TOTP 2FA.</p>
-    </div>
-    """
-    return page('Secure Site', body)
+        return page('home.html')
 
 @app.route('/register', methods=['GET','POST'])
 def register():
@@ -183,18 +155,7 @@ def register():
                 flash('Username exists','error'); return redirect(url_for('register'))
         flash('Registered. Please login.','info')
         return redirect(url_for('login'))
-    body = f"""
-    <div class=box>
-      <h3>Create Account</h3>
-      <form method=post>
-        <input type=hidden name=csrf_token value="{csrf_token()}">
-        <label>Username<input required name=username type=text minlength=3 maxlength=64></label>
-        <label>Password<input required name=password type=password minlength=12></label>
-        <button type=submit>Register</button>
-      </form>
-    </div>
-    """
-    return page('Register', body)
+    return page('register.html', csrf_token=csrf_token())
 
 @app.route('/login', methods=['GET','POST'])
 def login():
@@ -226,35 +187,11 @@ def login():
                 require_totp = True
                 if not code or not totp_ok(totp_secret, code):
                     flash('TOTP code required/invalid','error')
-                    body = f"""
-                    <div class=box>
-                      <h3>Login</h3>
-                      <form method=post>
-                        <input type=hidden name=csrf_token value="{csrf_token()}">
-                        <label>Username<input required name=username type=text value="{u}"></label>
-                        <label>Password<input required name=password type=password></label>
-                                                <label>Authenticator code (TOTP)<input name=totp type=text pattern="\\d{{6}}"></label>
-                        <button type=submit>Login</button>
-                      </form>
-                    </div>
-                    """
-                    return page('Login', body)
+                    return page('login.html', csrf_token=csrf_token(), require_totp=True, prefill_user=u)
             c.execute('UPDATE users SET failed_attempts=?, locked_until=? WHERE username=?',(0,0,u)); c.commit()
             session['user'] = u
             flash('Logged in','info'); return redirect(url_for('home'))
-    body = f"""
-    <div class=box>
-      <h3>Login</h3>
-      <form method=post>
-        <input type=hidden name=csrf_token value="{csrf_token()}">
-        <label>Username<input required name=username type=text></label>
-        <label>Password<input required name=password type=password></label>
-        {'' if not require_totp else '<label>Authenticator code (TOTP)<input name=totp type=text pattern="\\d{6}"></label>'}
-        <button type=submit>Login</button>
-      </form>
-    </div>
-    """
-    return page('Login', body)
+        return page('login.html', csrf_token=csrf_token(), require_totp=require_totp)
 
 @app.route('/logout')
 def logout():
@@ -267,17 +204,7 @@ def profile():
     with db() as c:
         r = c.execute('SELECT totp_secret FROM users WHERE username=?',(u,)).fetchone()
         totp_secret = r[0] if r else None
-    body = f"""
-    <div class=box>
-      <h3>Profile</h3>
-      <p>User: <b>{u}</b></p>
-      {('<p class=ok>TOTP 2FA is <b>enabled</b>.</p>'
-        f'<form method=post action="{url_for('disable_totp')}"><input type=hidden name=csrf_token value="{csrf_token()}"><button type=submit>Disable TOTP</button></form>') if totp_secret else
-       ('<p class=err>TOTP 2FA is <b>disabled</b>.</p>'
-        f'<form method=post action="{url_for('enable_totp')}"><input type=hidden name=csrf_token value="{csrf_token()}"><button type=submit>Enable TOTP</button></form>')}
-    </div>
-    """
-    return page('Profile', body)
+    return page('profile.html', user=u, totp_enabled=bool(totp_secret), csrf_token=csrf_token())
 
 @app.route('/enable_totp', methods=['POST'])
 def enable_totp():
@@ -289,20 +216,8 @@ def enable_totp():
     with db() as c:
         c.execute('UPDATE users SET totp_secret=? WHERE username=?',(secret,u)); c.commit()
     uri = f"otpauth://totp/SecureDemo:{u}?secret={secret}&issuer=SecureDemo&algorithm=SHA1&digits=6&period=30"
-    body = f"""
-    <div class=box>
-      <h3>Profile</h3>
-      <p>User: <b>{u}</b></p>
-      <p class=ok>TOTP 2FA is <b>enabled</b>.</p>
-      <form method=post action="{url_for('disable_totp')}"><input type=hidden name=csrf_token value="{csrf_token()}"><button type=submit>Disable TOTP</button></form>
-      <hr>
-      <p>Add this to your Authenticator app:</p>
-      <code>{uri}</code>
-      <p>Secret: <code>{secret}</code></p>
-    </div>
-    """
     flash('TOTP enabled','info')
-    return page('Profile', body)
+    return page('profile.html', user=u, totp_enabled=True, csrf_token=csrf_token(), uri=uri, secret=secret)
 
 @app.route('/disable_totp', methods=['POST'])
 def disable_totp():

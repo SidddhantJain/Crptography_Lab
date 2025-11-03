@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block body %}
+<div class="box">
+  <h3>Login</h3>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Username
+      <input required name="username" type="text" value="{{ prefill_user or '' }}">
+    </label>
+    <label>Password
+      <input required name="password" type="password">
+    </label>
+    {% if require_totp %}
+    <label>Authenticator code (TOTP)
+      <input name="totp" type="text" pattern="\d{6}">
+    </label>
+    {% endif %}
+    <button type="submit">Login</button>
+  </form>
+</div>
+{% endblock %}

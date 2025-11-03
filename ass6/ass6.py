@@ -164,7 +164,7 @@ def parse_wire(blob: bytes) -> Tuple[bytes, bytes, bytes, bytes]:
 
 # -------------------- Interactive demo --------------------
 
-def main():
+def run_full_demo():
     print("=== Assignment 6: Confidentiality (RSA), Integrity (Hash), Non-Repudiation (Signature) ===\n")
 
     # Choose hash algorithm
@@ -246,4 +246,24 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import sys, base64
+
+    def encrypt_text_once():
+        # Wrapper that runs the full flow and prints the wire blob in base64 for convenience
+        print("\n--- Encrypt + Sign Message ---")
+        run_full_demo()  # already prints internals; keeping simple for demo scope
+
+    if sys.stdin.isatty():
+        while True:
+            print("\n=== Assignment 6 Menu ===")
+            print("1) Run full confidentiality+integrity+signature demo")
+            print("2) Quit")
+            ch = input("> ").strip()
+            if ch == "1":
+                encrypt_text_once()
+            elif ch == "2":
+                break
+            else:
+                print("Invalid choice.")
+    else:
+        run_full_demo()

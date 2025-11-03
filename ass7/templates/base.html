@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title or 'Secure Site' }}</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 2rem; }
+    nav a { margin-right: 1rem; }
+    .box { max-width: 560px; padding: 1rem; border: 1px solid #ddd; border-radius: 8px; }
+    .ok { color: #090; }
+    .err { color: #900; }
+    label { display:block; margin-top: 0.7rem; }
+    input[type=text], input[type=password] { width: 100%; padding: .5rem; }
+    button { padding: .5rem 1rem; margin-top: 1rem; }
+    .flash { margin: .5rem 0; padding: .5rem; border-radius: 4px; }
+    .error { background:#ffe0e0; }
+    .info { background:#e0f4ff; }
+    code { word-break: break-all; }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="{{ url_for('home') }}">Home</a>
+  {% if session.get('user') %}
+    <a href="{{ url_for('profile') }}">Profile</a>
+    <a href="{{ url_for('logout') }}">Logout</a>
+  {% else %}
+    <a href="{{ url_for('register') }}">Register</a>
+    <a href="{{ url_for('login') }}">Login</a>
+  {% endif %}
+</nav>
+{% for cat,msg in get_flashed_messages(with_categories=true) %}
+  <div class="flash {{ cat }}">{{ msg }}</div>
+{% endfor %}
+
+{% block body %}{% endblock %}
+</body>
+</html>
