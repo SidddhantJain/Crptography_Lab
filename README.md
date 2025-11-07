@@ -65,6 +65,53 @@ _, plain3 = decrypt(K, blob3, require_external_otp=True, external_otp_key=otp_ke
 **Created for: Siddhant Mishrikotkar**  
 **Project: Cryptography Lab**  
 **Date: 2024**
+## Simple modes (minimal logic)
+
+If you prefer the smallest possible scripts, use these minimal variants alongside the advanced assignments:
+
+- ASS2 (RSA-OAEP text): `ass2/ass2_simple.py`
+   - Generate: `python ass2/ass2_simple.py gen --who Alice`
+   - Encrypt: `python ass2/ass2_simple.py enc --pub Bob --text "hello"`
+   - Decrypt: `python ass2/ass2_simple.py dec --priv Bob --blob <BASE64>`
+
+- ASS3 (AES-GCM text): `ass3/ass3_simple.py`
+   - Keygen: `python ass3/ass3_simple.py gen-key --out ass3/key.bin`
+   - Encrypt: `python ass3/ass3_simple.py enc --key ass3/key.bin --text "hello"`
+   - Decrypt: `python ass3/ass3_simple.py dec --key ass3/key.bin --blob <HEX>`
+
+- ASS4 (DH + AES-GCM demo): `ass4/ass4_simple.py`
+   - Demo: `python ass4/ass4_simple.py demo`
+   - Encrypt: `python ass4/ass4_simple.py enc --text "hello"`
+   - Decrypt: `python ass4/ass4_simple.py dec --blob <HEX>`
+
+- ASS5 (Hash + HMAC text): `ass5/ass5_simple.py`
+   - Hash: `python ass5/ass5_simple.py hash --text "hello"`
+   - Verify hash: `python ass5/ass5_simple.py verify-hash --text "hello" --digest <HEX>`
+   - HMAC: `python ass5/ass5_simple.py hmac --key secret --text "hello"`
+   - Verify HMAC: `python ass5/ass5_simple.py verify-hmac --key secret --text "hello" --tag <HEX>`
+
+- ASS8 (secure file send/receive): `ass8/ass8.py`
+   - Simple send: `python ass8/ass8.py send --sender Alice --receiver Bob --in ass8/sample.png --out ass8/out_simple.ass8pkg --simple`
+   - Simple receive: `python ass8/ass8.py receive --sender Alice --receiver Bob --in ass8/out_simple.ass8pkg --out ass8/received_simple.png --simple`
+
+- ASS8 ultra-minimal (separate tiny script): `ass8/ass8_simple.py`
+   - Generate keys: `python ass8/ass8_simple.py gen --who Alice`
+   - Send: `python ass8/ass8_simple.py send --sender Alice --receiver Bob --in ass8/sample.png --out ass8/out_min.ass8pkg`
+   - Receive: `python ass8/ass8_simple.py recv --sender Alice --receiver Bob --in ass8/out_min.ass8pkg --out ass8/received_min.png`
+
+These scripts keep only the core functionality—no benchmarks or extra features—and most also support a tiny interactive menu when run without arguments.
+
+### More simple variants
+
+- ASS6 (RSA-SHA1 sign/verify): `ass6/ass6_simple.py`
+   - Generate: `python ass6/ass6_simple.py gen --who Alice`
+   - Sign text: `python ass6/ass6_simple.py sign --priv Alice --text "hello"`
+   - Verify: `python ass6/ass6_simple.py verify --pub Alice --text "hello" --sig <BASE64>`
+   - Tip: Run without arguments for a simple interactive menu (generate, sign, verify).
+
+- ASS7 (tiny Flask app): `ass7/ass7_simple.py`
+   - Run: `python ass7/ass7_simple.py`
+   - Pages: `/register`, `/login`, `/logout`, `/` (in-memory users, SHA-1 password hash, minimal demo)
 
 ---
 

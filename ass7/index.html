@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secure Login System</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h2>🔒 Secure Login System</h2>
+  <p style="max-width:600px;margin:0 auto 20px;font-size:0.95rem;line-height:1.3em;">
+    Aim: Demonstrate basic password protection techniques to reduce cracking risks.<br>
+    Techniques used: per-user random salt, SHA-256 hashing (no plain password stored), account lockout after repeated failures, simple strength check.
+  </p>
+
+  <div class="container">
+    <div class="form">
+      <h3>Sign Up</h3>
+      <input type="text" id="signupUser" placeholder="Username" />
+      <input type="password" id="signupPass" placeholder="Password" />
+      <button onclick="signUp()">Sign Up</button>
+      <p id="signupMsg"></p>
+    </div>
+
+    <div class="form">
+      <h3>Login</h3>
+      <input type="text" id="loginUser" placeholder="Username" />
+      <input type="password" id="loginPass" placeholder="Password" />
+      <button onclick="login()">Login</button>
+      <p id="loginMsg"></p>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
